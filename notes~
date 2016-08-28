@@ -1,0 +1,15 @@
+http://nwjs.io/
+
+Downloads
+Normal flavor
+
+create project folder
+
+create package.json
+
+{
+  "name": "desktop-php",
+  "main": "index.js"
+}
+
+

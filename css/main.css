@@ -1,0 +1,46 @@
+body {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.control-bar {
+  display: flex;
+  align-items: flex-start;
+  padding: 5px;
+  border-bottom: 2px outset;
+}
+
+.control-bar button {
+  margin: 4px;
+  width: 30px;
+  height: 30px;
+  background-size: 22px 22px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.-reload- {
+  background-image: url(../images/refresh.svg);
+}
+
+.-stop- {
+  background-image: url(../images/stop-button.svg);
+}
+
+.-back- {
+  background-image: url(../images/left.svg);
+}
+
+.-forward- {
+  background-image: url(../images/right.svg  );
+}
+
+.application {
+  display: flex;
+  flex-direction: column;
+}
+
+.application webview {
+
+}

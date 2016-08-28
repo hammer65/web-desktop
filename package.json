@@ -1,0 +1,13 @@
+{
+  "name": "desktop_php",
+  "main": "index.html",
+  "window": {
+    "width": 1000,
+    "height": 650
+  },
+  "dependencies": {
+    "express": "^4.14.0",
+    "node-php": "0.0.1"
+  },
+  "chromium-args": "--enable-logging=stderr"
+}
