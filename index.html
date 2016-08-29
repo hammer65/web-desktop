@@ -3,6 +3,7 @@
     <title>Web Desktop</title>
     <link rel="stylesheet" href="css/main.css" />
     <script>
+      const CONFIG = require('./app-config');
       const Browser = require('browser');
     </script>
   </head>
@@ -15,17 +16,14 @@
       </div>
       <webview id="app-view" src="http://google.com" />
     </div>
-    <div id="message">
-
-    </div>
     <script>
-      const browser = new Browser(
-        document.getElementById('app-view')
-      );
+      const appView = document.getElementById('app-view');
+      const browser = new Browser(appView);
       browser.backButton = document.getElementById('back-btn');
       browser.reloadButton = document.getElementById('reload-btn');
       browser.forwardButton = document.getElementById('forward-btn');
       browser.init();
     </script>
+    <script src="script/menu.js"></script>
   </body>
 </html>

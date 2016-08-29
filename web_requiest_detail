@@ -1,0 +1,50 @@
+requestId
+
+string. The ID of the request. Request IDs are unique within a browser session, so you can use them to relate different events associated with the same request.
+
+url
+
+string. Target of the request.
+method
+string. Standard HTTP method: for example, "GET" or "POST".
+frameId
+integer. Zero if the request happens in the main frame; a positive value is the ID of a subframe in which the request happens. If the document of a (sub-)frame is loaded (type is main_frame or sub_frame), frameId indicates the ID of this frame, not the ID of the outer frame. Frame IDs are unique within a tab.
+
+parentFrameId
+
+integer. ID of the frame that contains the frame which sent the request. Set to -1 if no parent frame exists.
+
+requestBodyOptional
+
+object. Contains the HTTP request body data. Only provided if extraInfoSpec contains "requestBody".
+
+errorOptional
+
+string. This is set if any errors were encountered when obtaining request body data.
+
+formDataOptional
+
+object. This object is present if the request method is POST and the body is a sequence of key-value pairs encoded in UTF-8 as either "multipart/form-data" or 
+"application/x-www-form-urlencoded".
+It is a dictionary in which each key contains the list of all values for that key. For example: {'key': ['value1', 'value2']}. If the data is of another media type, or if it is malformed, the object is not present.
+
+rawOptional
+
+array of webRequest.UploadData. If the request method is PUT or POST, and the body is not already parsed in formData, then this array contains the unparsed request body elements.
+
+tabId
+
+integer. ID of the tab in which the request takes place. Set to -1 if the request isn't related to a tab.
+
+type
+
+webRequest.ResourceType. The type of resource being requested: for example, "image", "script", "stylesheet".
+
+timeStamp
+
+number. The time when this event fired, in milliseconds since the epoch.
+
+originUrl
+
+string. URL of the resource that triggered this request. Note that this may not be the same as the URL of the page into which the requested resource will be loaded. For example, if a document triggers a load in a different window through the target attribute of a link, or a CSS document includes an image using the url() functional notation, then this will be the URL of the original document or of the CSS document, respectively.
+
