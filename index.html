@@ -5,6 +5,9 @@
     <script>
       const CONFIG = require('./app-config');
       const Browser = require('browser');
+      const startServer = require('server');
+      const myDir = nw.global.__dirname;
+      startServer(CONFIG.port, `${myDir}/${CONFIG.root}`);
     </script>
   </head>
   <body>
