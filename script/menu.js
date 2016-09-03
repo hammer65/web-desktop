@@ -1,6 +1,6 @@
 (() => {
-  const createURL = (dir, root, port=8080) => {
-    return `http://localhost:${port}/${root}/${dir}`;
+  const createURL = (dir, port) => {
+    return `http://localhost:${port}/${dir}`;
   }
 
   const menubar = new nw.Menu({ type: 'menubar' });
@@ -22,7 +22,7 @@
   let url;
   let tooltip;
   for(let i in CONFIG.applications) {
-    url = createURL(CONFIG.applications[i].dir, CONFIG.root)
+    url = createURL(CONFIG.applications[i].dir, CONFIG.port)
     tooltip = CONFIG.applications[i].tooltip ?
       CONFIG.applications[i].tooltip
       :
