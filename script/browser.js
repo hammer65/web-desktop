@@ -1,5 +1,5 @@
 class Browser {
-  constructor(Webview, controls={}) {
+  constructor(Webview) {
     this.Webview = Webview;
     this.goBack = this.goBack.bind(this);
     this.goForward = this.goForward.bind(this);

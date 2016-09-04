@@ -4,8 +4,8 @@
     <link rel="stylesheet" href="css/main.css" />
     <script>
       const CONFIG = require('./app-config');
-      const Browser = require('browser');
-      const startServer = require('server');
+      const Browser = require('./script/browser');
+      const startServer = require('./script/server');
       const myDir = nw.global.__dirname;
       startServer(CONFIG.port, `${myDir}/${CONFIG.root}`);
     </script>

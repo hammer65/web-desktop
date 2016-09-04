@@ -3,7 +3,7 @@ module.exports = {
   port: 9090,
   applications: {
     Example: {
-      tooltip: "My example application"
+      tooltip: "My example application",
       dir: 'example'
     }
   }
