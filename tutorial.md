@@ -533,7 +533,7 @@ the command to launch the app is
 
 If the nw executable was in your project directory alongside your package.json file and index.html and it would just be
 
-'nw'
+`nw`
 
 Instructions for how to package apps is on the nw.js website.
 
