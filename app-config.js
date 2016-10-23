@@ -5,6 +5,10 @@ module.exports = {
     Example: {
       tooltip: "My example application",
       dir: 'example'
+    },
+    Example2: {
+      tooltip: "link example",
+      dir: 'example2'
     }
   }
 };

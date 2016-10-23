@@ -1,3 +1,5 @@
+const url = require('url');
+
 class Browser {
   constructor(Webview) {
     this.Webview = Webview;
@@ -10,6 +12,8 @@ class Browser {
     const self = this;
     this.Webview.addEventListener(
       'loadstart', () => {
+        this.setUpRedirect(this.Webview.request);
+        this.insertBaseDir(this.Webview.request);
         if (self.reloadButton) {
           self.reloadButton.className = '-stop-';
         }
@@ -22,6 +26,10 @@ class Browser {
         }
       }
     );
+  }
+
+  set base(base) {
+    this.baseDir = base;
   }
 
   set forwardButton(Button) {
@@ -48,6 +56,45 @@ class Browser {
   get forwardButton() { return this._forwardButton; }
   get backButton() { return this._backButton; }
   get reloadButton() { return this._reloadButton; }
+
+  insertBaseDir(reqObj) {
+    // ,
+    // types: ['main_frame', 'sub_frame']
+    const filter = {
+      urls: ['*://localhost/*']
+    };
+    reqObj.onBeforeRequest.addListener(
+      (req) => {
+        const parsed = url.parse(req.url);
+        if (parsed.path.indexOf(this.baseDir) === -1) {
+          const newPath = `/${this.baseDir}${parsed.path}`;
+          const redir = req.url.replace(parsed.path, newPath);
+          return {
+            redirectUrl: redir
+          };
+        }
+      }, filter, ['blocking']
+    );
+  }
+
+  setUpRedirect(reqObj) {
+    const filter = {
+      urls: ['<all_urls>'],
+      types: [
+        'main_frame',
+        'sub_frame',
+        'other'
+      ]
+    };
+    reqObj.onBeforeRequest.addListener(
+      (req) => {
+        if(req.url.indexOf('localhost') === -1) {
+          nw.Shell.openExternal(req.url);
+          return { cancel: true };
+        }
+      },filter,['blocking']
+    );
+  }
 
   goBack() {
     if (this._backButton && this.Webview.canGoBack()) {

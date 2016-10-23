@@ -44,13 +44,25 @@ Projects which use node modules use a common configuration file called `package.
     "width": 1000,
     "height": 650
   },
+  "webview": {
+    "partitions": [
+       {
+         "name": "trusted",
+         "accessible_resources": [ "<all_urls>" ]
+       }
+    ]
+  }
   "chromium-args": "--enable-logging=stderr"
 }
 ```
 
 Our project needs a name (no spaces), and a file which acts as the root of the application. This can be an HTML file or a js file. If it's a js file the app starts in the node javascript context and you must then use the nw api to open a window. If it's an HTML file the app opens in the browser javascript context and that page is the initial window of your application. In this case we want an HTML file. It can be called whatever you like but we are going here with the convention of using `index.html`.
 
-The `window` option sets the initial size of our main window. The last option would be something you use in development and then not use in a packaged application. It allows you to call console.log() in your browser context code and see the logged message in the command line. Without the dev tools this is the only way you have of troubleshooting what you are doing. `chromium-args` can set a lot of other parameters related to the Chrome part of your app. There is documentation for these linked from the nw.js documentation.
+The `window` option sets the initial size of our main window.
+
+The 'webview' option contains settings for a special HTML tag we will be using in our application later. This setting sets permissions to load external resources for the webview tag.
+
+The last option would be something you use in development and then not use in a packaged application. It allows you to call console.log() in your browser context code and see the logged message in the command line. Without the dev tools this is the only way you have of troubleshooting what you are doing. `chromium-args` can set a lot of other parameters related to the Chrome part of your app. There is documentation for these linked from the nw.js documentation.
 
 Once we have this file complete and saved we can then use NPM to install the two modules we need.
 
@@ -85,7 +97,11 @@ Lets start with index.html.
   </head>
   <body>
     <div class="application">
-      <webview id="app-view" src="http://google.com" />
+      <webview
+        partition="trusted"
+        id="app-view"
+        src="main.html"
+      />
     </div>
   </body>
 </html>
@@ -93,9 +109,9 @@ Lets start with index.html.
 
 On this page we have a tag you may not have seen before. It's the `webview` tag. This is similar to an iFrame, but it is a sandboxed version of a full browser window which can be embedded in an application. Chrome applications use webview tags to embed HTML content which has only limited connectivity with the host application. Much like the JavaFX browser control in my Nashorn browser project tutorial.
 
-In the newest nw.js versions the webview tag is a full Chrome browser window, with an extensive API for controlling it. This makes it ideal to hold the content from a PHP application without that application having any access we don't want it to have with our parent application. But it is just a window. It has no back button, no forward button, no reload or stop controls. So again much like Nashorn Browser we have to build those things. Fortunately this time it's a little bit easier.
+Related to the permission settings we put in package.json, the "partition" attribute should match the name we set in our permissions settings. This allows us to load a local "splash page" called `main.html`. Which can be designed to look any way you like.
 
-Right now we have the webview set to go to Google but this could be the index page of an application, it could be a static or dynamic intro page or an external web site of your own if you like. It's up to you.
+In the newest nw.js versions the webview tag is a full Chrome browser window, with an extensive API for controlling it. This makes it ideal to hold the content from a PHP application without that application having any access we don't want it to have with our parent application. But it is just a window. It has no back button, no forward button, no reload or stop controls. So again much like Nashorn Browser we have to build those things. Fortunately this time it's a little bit easier.
 
 ```html
 <div class="application">
@@ -104,7 +120,11 @@ Right now we have the webview set to go to Google but this could be the index pa
     <button class="-reload-" id="reload-btn"></button>
     <button class="-forward-" id="forward-btn"></button>
   </div>
-  <webview id="app-view" src="http://google.com" />
+  <webview
+    partition="trusted"
+    id="app-view"
+    src="main.html"
+  />
 </div>
 ```
 
@@ -178,11 +198,12 @@ class Browser {
     this.goBack = this.goBack.bind(this);
     this.goForward = this.goForward.bind(this);
     this.reload = this.reload.bind(this);
+    this.baseDir = '';
   }
 }
 ```
 
-The constructor for our class accepts a reference to our webview tag. In addition it binds a few methods we haven't written yet to our object instance. In ES6 methods you use for event handling must be bound to the instance of the class manually. By doing that `this` refers to that instance. This is a pretty simple operation using the `bind` method of the function object.
+The constructor for our class accepts a reference to our webview tag. In addition it binds a few methods we haven't written yet to our object instance. In ES6 methods you use for event handling must be bound to the instance of the class manually. By doing that `this` refers to that instance. This is a pretty simple operation using the `bind` method of the function object. A `baseDir` property is also set. We will see what that is later.
 
 Another nice feature are getters and setters. As with most languages which use these they are useful for allowing controlled access to private members and computed values based on private members. Javascript does not actually have the concept of private members but the convention of starting the names of methods and properties intended to be private using an underscore is still used. For setters and getters you can't have an object property of the same name, they must accesss or set something else. In this case we need to inject a reference to each controller button in our page into our object instance and assign them to "private" members.
 
@@ -198,6 +219,10 @@ set forwardButton(Button) {
 This is more useful than setting a property to assign a button reference to an object property because at the same time we set it, we have the opportunity to set an event listener to use with the button. Now add the other setters.
 
 ```javascript
+set base(base) {
+  this.baseDir = base;
+}
+
 set backButton(Button) {
   this._backButton = Button;
   this._backButton.addEventListener(
@@ -275,6 +300,8 @@ init() {
   const self = this;
   this.Webview.addEventListener(
     'loadstart', () => {
+      this.setUpRedirect(this.Webview.request);
+      this.insertBaseDir(this.Webview.request);
       if (self.reloadButton) {
         self.reloadButton.className = '-stop-';
       }
@@ -292,24 +319,117 @@ init() {
 
 This code introduces yet another ES6 feature called `arrow functions`. Several other languages can express functions this way. It's a nice short hand to use in javascript. No `function` keyword is needed. You lead with the parenthesis characters, followed by => and then the block section of the function. It the function code is a single line you don't even need the curly braces.
 
-What the init method does is establish handling of `loadstart` and `loadstop` events of the webview in order to properly toggle the appearance of the reload/stop button. The callback function of `addEventListener` is expressed as an arrow function but is no different than writing
+What the init method does is establish handling of `loadstart` and `loadstop` events of the webview in order to properly toggle the appearance of the reload/stop button and to do some special processing of requests before the browser makes them. The methods `setUpRedirect()` and `insertBaseDir()` aren't there yet. We will cover those in a moment. The callback function of `addEventListener` is expressed as an arrow function but is no different than writing
 
 ```javascript
 // alternate example code not meant to go in the project
 this.webView.addEventListener('loadstop', function(){
+  this.setUpRedirect(this.Webview.request);
+  this.insertBaseDir(this.Webview.request);
   if (self.reloadButton) {
     self.reloadButton.className = '-reload-';
   }
 });
 ```
 
-The only thing left to do is export the class as a module. Unlike everything else we just wrote that code goes <strong>outside of the class body</strong>.
+##The Web Request API
+
+Because NW.js can utilitze Chrome application and extension APIs. we have at our disposal the WebRequest API. This API can intercept web requests or any kind done by a browser window. It can then block those requests, manipulate them and then pass them on or just log the details of those requests. In this case we have two design goals in mind.
+
+1. Make sure links in our loaded applications which lead to external URL's load in the users default web browser instead of our desktop application. Our interface isn't really for surfing the web so opening external links in a standard browser helps keep this content separate from our application.
+2. We want our application to be able to switch between multiple PHP applications which will each be in it's own subfolder. In order to do that we will need to direct links to the subfolder rather than the "root" directory of the web server.
+
+So we add the two methods mentioned above used on `loadstart` below the setter and getter methods.
+
+```javascript
+insertBaseDir(reqObj) {
+  const filter = {
+    urls: ['*://localhost/*']
+  };
+  reqObj.onBeforeRequest.addListener(
+    (req) => {
+      const parsed = url.parse(req.url);
+      if (parsed.path.indexOf(this.baseDir) === -1) {
+        const newPath = `/${this.baseDir}${parsed.path}`;
+        const redir = req.url.replace(parsed.path, newPath);
+        return {
+          redirectUrl: redir
+        };
+      }
+    }, filter, ['blocking']
+  );
+}
+
+setUpRedirect(reqObj) {
+  const filter = {
+    urls: ['<all_urls>'],
+    types: [
+      'main_frame',
+      'sub_frame',
+      'other'
+    ]
+  };
+  reqObj.onBeforeRequest.addListener(
+    (req) => {
+      if(req.url.indexOf('localhost') === -1) {
+        nw.Shell.openExternal(req.url);
+        return { cancel: true };
+      }
+    },filter,['blocking']
+  );
+}
+```
+
+When a 'loadstart' event is triggered the first method which is called `insertBaseDir` accepts the request object of the webview. Web requests have several "lifecycle" methods but the one we are interested in here is `onBeforeRequest` which is triggered before the browser makes the request to the network. Event listeners for `onBeforeRequest` need a URL pattern to act upon. A pattern of `<all_urls>` will act on all requests but these can be narrowed down via a different pattern. In this case we want to act upon all localhost requests. These filter patterns are documented [here]{https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Match_patterns}
+
+We need to parse a URL so we will need the node.js "url" module. At the top of browser.js include the following line.
+
+`const url = require('url');`
+
+We then parse the incoming url to get it's constituent parts.
+
+`const parsed = url.parse(req.url);`
+
+Our project will have an "applications" directory and inside that will be individual directories (our base directory) for the PHP applications which our desktop app can access we will create later. When we tell our desktop app which PHP application to launch, it will tell the browser class which base directory to direct links. This listener function will append the base directory to the path being accessed so that all requests made by the application are accessed properly.
+
+```javascript
+reqObj.onBeforeRequest.addListener(
+  (req) => {
+    const parsed = url.parse(req.url);
+    if (parsed.path.indexOf(this.baseDir) === -1) {
+      const newPath = `/${this.baseDir}${parsed.path}`;
+      const redir = req.url.replace(parsed.path, newPath);
+      return {
+        redirectUrl: redir
+      };
+    }
+  }, filter, ['blocking']
+);
+```
+if the path portion of the URL does not include our base directory then we create a path which does and then replace that sub string of the url. The callback then returns the newly modified url. The return value must be an object and in this case it must have a `redirectUrl` property with a value of the modified url.
+
+The second and third arguments of the `addListener` method are our filter object and an array which in this case just tells the request API to make this a blocking listener. A request will not be made until this function has returned a value. A listener which is not blocking will allow a request to go forward while the callback executes.
+
+The `setUpRedirect` method is similar. It sets up another listerner for `onBeforeRequest` this time with a different filter. Now we are acting on all URLs and are only interested in specific types of requests. This method will allow us to redirect links for external content to the user's default browser. Unfortunately the web request API doesn't have "negative" filters to execute listeners if a URL does not match so we have to take a slightly different strategy here.
+
+```javascript
+(req) => {
+  if(req.url.indexOf('localhost') === -1) {
+    nw.Shell.openExternal(req.url);
+    return { cancel: true };
+  }
+},filter,['blocking']
+```
+
+Here we are checking if the url contains "localhost" and if it does we call a special object and method provided by NW.js which will load the URL into the users default internet browser. We then return an object which contains `{ cancel: false }` to tell the browser to cancel the request.
+
+The only thing left to do with our browser class is export the it as a module. Unlike everything else we just wrote that code goes <strong>outside of the class body</strong>.
 
 ```javascript
 module.exports = Browser;
 ```
 
-That concludes the Browser class.
+That concludes the initial coding of the Browser class.
 
 ##Using the Browser Class
 
@@ -340,7 +460,7 @@ Here we get a reference to the webview tag, an instance of the Browser class is 
 
 #Building a Menu
 
-Because this is a desktop application shell, it can create native OS menus for your application. We need to create two menus here. A `File` menu with a `quit` option to quit the application and an `application` menu to select PHP applications to load into the webview. I bet you thought we would only load a single app, but what fun is that?
+Because this is a desktop application shell, it can create native OS menus for your application. We need to create two menus here. A `File` menu with a `quit` option to quit the application and an `application` menu to select PHP applications to load into the webview.
 
 We can construct a `config` module which allows us to configure Web Desktop to load as many different applications as we want. Create an `app-config.js` file in the root of your project directory which looks like this.
 
@@ -349,7 +469,7 @@ module.exports = {
   root: 'applications',
   port: 9090,
   applications: {
-    xample: {
+    example: {
       tooltip: "My example application",
       dir: 'example'
     }
@@ -390,6 +510,8 @@ This file will go inside the "script" directory we made earlier.
 
 inside this construct we first need a named function which puts together a localhost URL based on it's arguments. We will be using another feature of ES6 here called "template strings" which if you are familiar with PHP you have seen before with slightly different syntax. Instead of using single or double quotes for strings, you use backtick characters (\`). This allows you to do multiline strings and embed code and variables inside the string rather than manually concatenating strings together with the "+" symbol. Variables or code are injected into the string with this syntax `${value}`
 
+Inside our self executing function we put the first bit of code.
+
 ```javascript
 const createURL = (dir, port) => {
   return `http://localhost:${port}/${dir}`;
@@ -423,7 +545,9 @@ menubar.append(new nw.MenuItem({
 }));
 ```
 
-We then add that `File` menu to the menubar. Below we need to loop through each application in the config file we just built. Because this file contains just a function included in `index.js` through a script tag we have CONFIG and browser available in the global scope.
+We then add that `File` menu to the menubar.
+
+Below we need to loop through each application in the config file we just built. Because this file contains just a function included in `index.js` through a script tag we have CONFIG and browser available in the global scope.
 
 ```javascript
 const appMenu = new nw.Menu();
@@ -439,13 +563,14 @@ for(let i in CONFIG.applications) {
     label: i,
     tooltip,
     click: () => {
+      browser.base = CONFIG.application[i].dir;
       browser.load(url);
     }
   }));
 }
 ```
 
-The `createURL` function at the top is called for each application with the home directory and port we will be using for our application server. We look to see if a tooltip has been set and if not then we use the home directory name for the tooltip. the newly created `menuitem` is appended to the application menu and a click handler is setup to call the load method of the browser with the selected URL. When the application is running, the user will be able to go to the application menu, select an application and that application will load in the webview.
+The `createURL` function at the top is called for each application with the home directory and port we will be using for our application server. We look to see if a tooltip has been set and if not then we use the home directory name for the tooltip. the newly created `menuitem` is appended to the application menu and a click handler is setup to first set the base directory for the selected PHP application and then call the load method of the browser with the selected URL. When the desktop application is running, the user will be able to go to the application menu, select a PHP application and that application will load in the webview.
 
 The three OSs which run nw.js will handle menus slightly different. You may know that the Mac OS gives every app a single menubar at the top while Linux and Windows attaches the menubar to the top of each window. It's best to use the same menu bar regardless.
 
@@ -543,7 +668,7 @@ As I mentioned before nw.js supports APIs spread across node.js, Chromeium app a
 
 By accessing the webview tag API you can do things like inject helper scripts into running applications. Do special notifications to users, insert custom style sheets for users. You could implement macros for users of certain applications by recording their actions in the webview. You could launch different applicaions in different windows if you like as well.
 
-Some notable newer Chrome APIs to try would be the bluetooth and USB APIs. I did attempt to use the Chrome request API in this project but couldn't get it to work at this time. If I had we would have a feature to redirect any requests from the app frame for external websites to the user's default browser. This should be possible in the future. Unlike with Chrome apps and extensions all of these APIs are enabled by default.
+Some notable newer Chrome APIs to try would be the bluetooth and USB APIs. Unlike with Chrome apps and extensions all of these APIs are enabled by default.
 
 On the server side you have everything that node can do. Sockets, file system access, database access. Express can handle multiple routing paths so you could have the server handle more than just requests to PHP. Middleware is available to allow for secure login including single signon solutions.
 

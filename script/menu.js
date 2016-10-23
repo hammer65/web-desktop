@@ -31,6 +31,7 @@
       label: i,
       tooltip,
       click: () => {
+        browser.base = CONFIG.applications[i].dir;
         browser.load(url);
       }
     }));

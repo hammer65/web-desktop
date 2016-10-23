@@ -2,6 +2,7 @@ module.exports = (port, root) => {
   const express = require('express');
   const php = require("node-php");
   const path = require("path");
+  const here = `${process.cwd()}/${root}/`;
 
   const app = express();
   app.use((req, res, next) => {
@@ -12,7 +13,7 @@ module.exports = (port, root) => {
       next();
     }
   });
-  app.use("/", php.cgi(root));
+  app.use('/', php.cgi(root));
 
   app.listen(port);
 

@@ -9,5 +9,13 @@
     "express": "^4.14.0",
     "node-php": "0.0.1"
   },
+  "webview": {
+     "partitions": [
+        {
+          "name": "trusted",
+          "accessible_resources": [ "<all_urls>" ]
+        }
+     ]
+  },
   "chromium-args": "--enable-logging=stderr"
 }
