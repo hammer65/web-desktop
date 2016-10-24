@@ -332,7 +332,7 @@ this.webView.addEventListener('loadstop', function(){
 
 ##The Web Request API
 
-Because NW.js can utilitze Chrome application and extension APIs. we have at our disposal the WebRequest API. This API can intercept web requests or any kind done by a browser window. It can then block those requests, manipulate them and then pass them on or just log the details of those requests. In this case we have two design goals in mind.
+Because NW.js can utilitze Chrome application and extension APIs. we have at our disposal the <b>WebRequest API</b>. This API can intercept web requests or any kind done by a browser window. It can then block those requests, manipulate them and then pass them on or just log the details of those requests. In this case we have two design goals in mind.
 
 1. Make sure links in our loaded applications which lead to external URL's load in the users default web browser instead of our desktop application. Our interface isn't really for surfing the web so opening external links in a standard browser helps keep this content separate from our application.
 2. We want our application to be able to switch between multiple PHP applications which will each be in it's own subfolder. In order to do that we will need to direct links to the subfolder rather than the "root" directory of the web server.
@@ -404,7 +404,7 @@ reqObj.onBeforeRequest.addListener(
   }, filter, ['blocking']
 );
 ```
-if the path portion of the URL does not include our base directory then we create a path which does and then replace that sub string of the url. The callback then returns the newly modified url. The return value must be an object and in this case it must have a `redirectUrl` property with a value of the modified url.
+If the path portion of the URL does not include our base directory then we create a path which does and then replace that sub string of the url. The callback then returns the newly modified url. The return value must be an object and in this case it must have a `redirectUrl` property with a value of the modified url.
 
 The second and third arguments of the `addListener` method are our filter object and an array which in this case just tells the request API to make this a blocking listener. A request will not be made until this function has returned a value. A listener which is not blocking will allow a request to go forward while the callback executes.
 
