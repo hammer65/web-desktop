@@ -324,8 +324,6 @@ What the init method does is establish handling of `loadstart` and `loadstop` ev
 ```javascript
 // alternate example code not meant to go in the project
 this.webView.addEventListener('loadstop', function(){
-  this.setUpRedirect(this.Webview.request);
-  this.insertBaseDir(this.Webview.request);
   if (self.reloadButton) {
     self.reloadButton.className = '-reload-';
   }
