@@ -1,4 +1,4 @@
-#Creating a "PHP on the Desktop" Application in nw.js
+# Creating a "PHP on the Desktop" Application in nw.js
 
 PHP is a very popular web application platform. Millions of web sites use it. One common question about PHP I have heard many times in the past is "what about desktop applications with PHP?".
 
