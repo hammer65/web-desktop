@@ -4,11 +4,11 @@ PHP is a very popular web application platform. Millions of web sites use it. On
 
 A lot of attempts have been made to do this. There was even a GTK GUI binding for PHP at one time. Others have tried to cram the PHP interpreter into various packages, some with built in web servers. Not a lot of these projects have caught on but thanks to node.js and the Chromium project we have some more options. this tutorial will guide you through one possible way to do this, with several potential modifications that could make it quite useful in many areas where PHP applications are useful.
 
-##NW.JS
+## NW.JS
 
 NW.JS (formally node Webkit) is a project which combines node.js and Chromium (Google's open source version of Chrome) to create a desktop application shell.This application shell provides access to all node.js APIs, all web APIs and most Chrome app, Chrome extension APIs and with the right preparation, the Google native client and Pepper plugin APIs. Some of those work in different Javascript contexts within nw.js but can be used together in various ways. Taken together it is an extremely versatile system with a lot of possibilities with multiple ways to connect to outside resources such as databases, the file system and network resources.
 
-##Getting NW.JS
+## Getting NW.JS
 
 For this project you will need NW.JS which you can get [here](http://nwjs.io "nw.js website"). There are two main "flavors" of nw.js. One is the normal version you might use when packaging your application. The other is the SDK version which includes the Chrome developer tools to aid in debugging. NW.JS is available for Mac (64bit), Windows (64bit and 32bit) and Linux (64bit and 32bit).
 
@@ -20,7 +20,7 @@ Native client allows a developer to run C++ based code in the browser. It is use
 
 I put my unpacked nw directory in an "applications" directory in my home directory, then sym linked it in the /usr/bin directory so it was in the command path. When packaging an app, you will want to put the nw executable in the same directory as your project. Instructions for how to bundle apps for distribution is on the nw.js [web site](http://nwjs.io) in the documentation section.
 
-##What else do I need?
+## What else do I need?
 
 I'm glad you asked. You will need the PHP CGI SAPI. In Ubuntu this is easy to get.
 
@@ -32,7 +32,7 @@ You also need NPM for your platform. You can get it from [here](https://docs.npm
 
 Once you have all that it's time to make a project folder somewhere appropriate and start setting up your new application. We will be installing a couple of node modules using NPM but we need a few things set up first.
 
-##Project setup
+## Project setup
 
 Projects which use node modules use a common configuration file called `package.json`. There are a lot of options for this file but rather than overwhelming you we only need a few of them. There is a link in the nw.js docs to learn more about all the possible options which pertain to nw.js. The file is in pure JSON format (double quotes around keys and string values) and goes in the root of your project
 
@@ -86,7 +86,7 @@ in your project directory and those modules will be reinstalled. You can uninsta
 
 Read up on npm for more information
 
-##First Code
+## First Code
 
 Lets start with index.html.
 
@@ -130,7 +130,7 @@ In the newest nw.js versions the webview tag is a full Chrome browser window, wi
 
 Above we add buttons. Button tags are at home inside HTML forms or out. This time we don't need a form tag. In order for the user to navigate the application with standard back, forward and reload/stop buttons as needed (depending on the application it may not be) we will implement these buttons at the top of our application. To that end we need some code to do this.
 
-##The CSS
+## The CSS
 
 We can get the CSS styling done first. Make a directory in your project root called "css" and inside that directory a file called `main.css`. The following code should go in that file.
 
@@ -185,7 +185,7 @@ I found some nice SVG icons for the buttons. Other ways of decorating the button
 <link rel="stylesheet" href="css/main.css" />
 ```
 
-##The Browser Class
+## The Browser Class
 
 Much like Nashorn Browser we will set up a browser class to use for controlling the webview. And I do mean CLASS. There is something I've yet to tell you about the newest version of nw.js which is pretty nice. The version of Chromium and the V8 javascript engine used here fully (well almost) implements  the ECMAScript 2015 standard. Yes ES6 in all it's goodness is available save for one unfortunate exception for now. That exception is the module specification. Fortunately, because we are using node.js APIs as well we have a fully operational "require" function. Scripts loaded with require, do work within the node context but that's fine for our purposes.
 
@@ -253,7 +253,7 @@ get backButton() { return this._backButton; }
 get reloadButton() { return this._reloadButton; }
 ```
 
-###Event Handlers
+### Event Handlers
 
 Now lets implement our event handlers.
 
@@ -291,7 +291,7 @@ load(url) {
 }
 ```
 
-###The init() Method
+### The init() Method
 
 One final method which will add some event handlers to the webview itself are needed.
 
@@ -330,7 +330,7 @@ this.webView.addEventListener('loadstop', function(){
 });
 ```
 
-##The Web Request API
+## The Web Request API
 
 Because NW.js can utilitze Chrome application and extension APIs. we have at our disposal the <b>WebRequest API</b>. This API can intercept web requests or any kind done by a browser window. It can then block those requests, manipulate them and then pass them on or just log the details of those requests. In this case we have two design goals in mind.
 
@@ -429,7 +429,7 @@ module.exports = Browser;
 
 That concludes the initial coding of the Browser class.
 
-##Using the Browser Class
+## Using the Browser Class
 
 Now lets use the Browser class in our `index.html`. In the head of your `index.html` below the title tag put this code.
 
@@ -456,7 +456,7 @@ At the bottom of the body of `index.html` put this code
 
 Here we get a reference to the webview tag, an instance of the Browser class is then created using the reference to the webview and references to our buttons are injected into our instance. The `init` method is then called.
 
-#Building a Menu
+# Building a Menu
 
 Because this is a desktop application shell, it can create native OS menus for your application. We need to create two menus here. A `File` menu with a `quit` option to quit the application and an `application` menu to select PHP applications to load into the webview.
 
@@ -572,7 +572,7 @@ The `createURL` function at the top is called for each application with the home
 
 The three OSs which run nw.js will handle menus slightly different. You may know that the Mac OS gives every app a single menubar at the top while Linux and Windows attaches the menubar to the top of each window. It's best to use the same menu bar regardless.
 
-##The Server part
+## The Server part
 
 In your project directory root create an `applications` directory and inside that an `example` directory. Inside the example directory create a file called `index.php`.
 
@@ -648,7 +648,7 @@ The app is then told to start the server listening on the port set in our config
 
 The script tag at the top of `index.html` should now look like this. Of note here  is the use of nw.global which is how you access node.js globals in the browser context. The global `__dirname` (two leading underscores) is in this case your project root path. We put that together with the application root directory we set in the `config` file (using a template string) and feed it with the port we want to use to our server code.
 
-##Launching It
+## Launching It
 
 the command to launch the app is
 
@@ -660,7 +660,7 @@ If the nw executable was in your project directory alongside your package.json f
 
 Instructions for how to package apps is on the nw.js website.
 
-##Possible modifications
+## Possible modifications
 
 As I mentioned before nw.js supports APIs spread across node.js, Chromeium app and extension APIs and web APIs as well as their own. Webview tags have the ability to allow access from the host application to pretty much anything in the webview frame. Access going the other way can be done with the post message API.
 
@@ -674,6 +674,6 @@ PHP CGI isn't the fastest performer. It's probably fine for single users. You ca
 
 There are other PHP interpreter modules out there. Some of them even embed an interpeter into a native node extension. If you use native extensions you will need to follow some special instructions on the nw.js web site to get them to work, In addition, it's not just PHP you can execute. You could have express route to a traditional node web application as well. There are modules for running ruby, C#, perl and other languages as well.
 
-##Conclusion
+## Conclusion
 
 This example should get you started on exploring using PHP with nw.js on the desktop. I hope you have enjoyed the tutorial. Source code is available for download at github [here](https://github.com/hammer65/web-desktop) enjoy.
